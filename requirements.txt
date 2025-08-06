@@ -1,7 +1,10 @@
 streamlit
+streamlit-lottie
+pillow
+opencv-contrib-python  # For xphoto.oilPainting
+numpy
+torch
 diffusers
 transformers
-torch
-Pillow
+loguru
 accelerate
-pydub
