@@ -1,3 +1,5 @@
+import sys
+print("Python path:", sys.path)
 import streamlit as st
 import os
 import uuid
