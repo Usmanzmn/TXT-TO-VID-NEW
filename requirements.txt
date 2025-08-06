@@ -1,6 +1,10 @@
 streamlit
-diffusers==0.27.2
-transformers==4.41.1
-torch==2.2.2
-Pillow
+streamlit-lottie
+pillow
+opencv-contrib-python  # For xphoto.oilPainting
+numpy
+torch
+diffusers
+transformers
+loguru
 accelerate
