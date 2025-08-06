@@ -1,41 +1,34 @@
-import sys
-print("Python path:", sys.path)
 import streamlit as st
-import os
+from diffusers import StableDiffusionPipeline
+import torch
 import uuid
-from utils.image_gen import load_pipeline, generate_image
-from utils.overlay import overlay_text
-from utils.video_gen import make_video
+import os
+from PIL import Image
 
-st.title("🧠 Text-to-Video Generator (Streamlit + Diffusers)")
+# Set up output folder
+os.makedirs("outputs", exist_ok=True)
 
-text_input = st.text_area("Enter your story or script here:")
+# Load pipeline (cached after first run)
+@st.cache_resource
+def load_pipe():
+    pipe = StableDiffusionPipeline.from_pretrained(
+        "runwayml/stable-diffusion-v1-5", torch_dtype=torch.float32
+    )
+    pipe = pipe.to("cpu")  # Change to "cuda" if using GPU
+    return pipe
 
-if st.button("Generate Video"):
-    with st.spinner("Loading pipeline..."):
-        pipe = load_pipeline()
+pipe = load_pipe()
 
-    os.makedirs("outputs", exist_ok=True)
-    chunks = text_input.strip().split(".")
-    image_paths = []
+# Streamlit UI
+st.title("🖼️ Text-to-Image Generator")
+prompt = st.text_area("Enter your prompt:")
 
-    for i, chunk in enumerate(chunks):
-        if not chunk.strip():
-            continue
-
-        prompt = chunk.strip()
-        base_name = str(uuid.uuid4())
-        raw_img_path = f"outputs/{base_name}_raw.png"
-        final_img_path = f"outputs/{base_name}_text.png"
-
-        st.write(f"Generating image for: *{prompt}*")
-        generate_image(pipe, prompt, raw_img_path)
-        overlay_text(raw_img_path, prompt, final_img_path)
-        image_paths.append(final_img_path)
-
-    video_path = make_video(image_paths)
-    st.success("Video created!")
-
-    st.video(video_path)
-    with open(video_path, "rb") as f:
-        st.download_button("Download Video", f, file_name="video.mp4")
+if st.button("Generate Image") and prompt.strip():
+    with st.spinner("Generating image..."):
+        image = pipe(prompt).images[0]
+        image_id = str(uuid.uuid4())
+        output_path = f"outputs/{image_id}.png"
+        image.save(output_path)
+        st.image(image, caption="Generated Image", use_column_width=True)
+        with open(output_path, "rb") as f:
+            st.download_button("Download Image", f, file_name="generated.png")
